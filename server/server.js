@@ -15,8 +15,8 @@ const port = process.env.PORT || 3000;
 
 app.use(bodyParser.json());
 
-//
-app.post('/users', (req, res) => {
+//sign up an account
+app.post('/users/signup', (req, res) => {
   var body = _.pick(req.body, ['email', 'password']);
   var user = new User(body);
 
@@ -29,14 +29,32 @@ app.post('/users', (req, res) => {
   })
 });
 
-//
+//Get back the _id, with the token
 app.get('/users/me', authenticate, (req, res) => {
   res.send(req.user);
 });
 
+// POST /users/login {email, password}, and get back _id
+app.post('/users/login', (req, res) => {
+  var body = _.pick(req.body, ['email', 'password']);
 
+  User.findByCredentials(body.email, body.password).then((user) => {
+    return user.generateAuthToken().then((token) => {
+      res.header('x-auth', token).send(user);
+    });
+  }).catch((e) => {
+    res.status(400).send();
+  });
+});
 
-
+//When log out, remove the token
+app.delete('/users/logout', authenticate, (req, res) => {
+  req.user.removeToken(req.token).then(() => {
+    res.status(200).send();
+  }, () => {
+    res.status(400).send();
+  });
+});
 //
 // //sign up, insert a record
 // app.post('/sign-up', (req, res) => {
@@ -57,22 +75,6 @@ app.get('/users/me', authenticate, (req, res) => {
 // app.get('/require', (req, res) => {
 //   PasswordManager.find().then((records) => {
 //     res.send({records});
-//   }, (e) => {
-//     res.status(400).send(e);
-//   });
-// });
-
-
-
-
-
-// app.post('/testdb', (req, res) => {
-//   var testCase = new TestDB({
-//     name: req.body.name
-//   });
-//
-//   testCase.save().then((doc) => {
-//     res.send(doc);
 //   }, (e) => {
 //     res.status(400).send(e);
 //   });
