@@ -1,17 +1,26 @@
 var mongoose = require('mongoose');
 
 const mngrSchema = new mongoose.Schema({
-  username: {
+  service: {
+    type: String,
+    required: true,
+    minlength: 1,
+    trim: true
+  },
+  account: {
+    type: String,
+    required: true,
+    minlength: 1,
+    trim: true
+  },
+  //actuall they're encrypted password
+  password: {
     type: String,
     required: true
   },
-  password: {
-    type: String,
-    default: "123456"
-  },
-  status: {
-    type: Boolean,
-    default: false
+  creator_id: {
+    type: mongoose.Schema.Types.ObjectId,
+    requried: true
   }
 });
 

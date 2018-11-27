@@ -8,8 +8,6 @@ var {PasswordManager} = require('./models/pwdManager');
 var {User} = require('./models/user');
 var {authenticate} = require('./middleware/authenticate');
 
-//var {TestDB} = require('./models/dbTest');
-
 var app = express();
 const port = process.env.PORT || 3000;
 
@@ -55,33 +53,72 @@ app.delete('/users/logout', authenticate, (req, res) => {
     res.status(400).send();
   });
 });
-//
-// //sign up, insert a record
-// app.post('/sign-up', (req, res) => {
-//   var user = new PasswordManager({
-//     username: req.body.username,
-//     password: req.body.password
-//   });
-//
-//   user.save().then((doc) => {
-//     res.send(doc);
-//   }, (e) => {
-//     res.status(400).send(e);
-//   });
-// })
-//
-// //get all the records from the database
-// //this function should be strictly restricted
-// app.get('/require', (req, res) => {
-//   PasswordManager.find().then((records) => {
-//     res.send({records});
-//   }, (e) => {
-//     res.status(400).send(e);
-//   });
-// });
+
+//insert a record
+app.post('/password-manager', (req, res) => {
+  var record = new PasswordManager({
+    service: req.body.service,
+    account: req.body.account,
+    password: req.body.password,
+    creator_id: req.body.creator_id
+  });
+
+  record.save().then((doc) => {
+    res.send(doc);
+  }, (e) => {
+    res.send(e);
+  });
+});
+
+//delete a record
+app.delete('/password-manager/:service', (req, res) => {
+  var serv = req.params.service;
+
+  PasswordManager.findOneAndRemove({service: serv}).then((doc) => {
+    if (!doc) {
+      return res.status(404).send();
+    }
+    res.send(_.pick(doc, ['service', 'account']));    
+  }).catch((e) => {
+    res.status(400).send();
+  });
+});
+
+//update a record
+app.patch('/password-manager/:service', (req, res) => {
+  var serv = req.params.service;
+  var body = _.pick(req.body, ['account', 'password']);
+
+  PasswordManager.findOneAndUpdate({service: serv},
+    {$set: {
+      account: body.account,
+      password: body.password
+    }}, {new: true}).then((doc) => {
+      if (!doc) {
+        return res.status(404).send();
+      }
+      res.send(_.pick(doc, ['account', 'password']));
+    }).catch((e) => {
+      res.status(400).send();
+    });
+});
+
+//get a record
+app.get('/password-manager/:service', (req, res) => {
+  var serv = req.params.service;
+
+  PasswordManager.findOne({service: serv}, function(err, doc){
+    if (err) {
+      return res.status(404).send();
+    }
+    //res.send(doc);
+    //only get the account and the encrypted password
+    res.send(_.pick(doc, ['account', 'password']));
+  });
+});
 
 app.listen(port, () => {
   console.log(`Started on port ${port}`);
-})
+});
 
 module.exports = {app};
