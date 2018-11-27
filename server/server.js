@@ -55,12 +55,12 @@ app.delete('/users/logout', authenticate, (req, res) => {
 });
 
 //insert a record
-app.post('/password-manager', (req, res) => {
+app.post('/password-manager', authenticate, (req, res) => {
   var record = new PasswordManager({
     service: req.body.service,
     account: req.body.account,
     password: req.body.password,
-    creator_id: req.body.creator_id
+    creator_id: req.user._id
   });
 
   record.save().then((doc) => {
@@ -71,26 +71,31 @@ app.post('/password-manager', (req, res) => {
 });
 
 //delete a record
-app.delete('/password-manager/:service', (req, res) => {
+app.delete('/password-manager/:service', authenticate, (req, res) => {
   var serv = req.params.service;
 
-  PasswordManager.findOneAndRemove({service: serv}).then((doc) => {
+  PasswordManager.findOneAndRemove({
+    service: serv,
+    creator_id: req.user._id
+  }).then((doc) => {
     if (!doc) {
       return res.status(404).send();
     }
-    res.send(_.pick(doc, ['service', 'account']));    
+    res.send(_.pick(doc, ['service', 'account']));
   }).catch((e) => {
     res.status(400).send();
   });
 });
 
 //update a record
-app.patch('/password-manager/:service', (req, res) => {
+app.patch('/password-manager/:service', authenticate, (req, res) => {
   var serv = req.params.service;
   var body = _.pick(req.body, ['account', 'password']);
 
-  PasswordManager.findOneAndUpdate({service: serv},
-    {$set: {
+  PasswordManager.findOneAndUpdate({
+    service: serv,
+    creator_id: req.user._id
+    }, {$set: {
       account: body.account,
       password: body.password
     }}, {new: true}).then((doc) => {
@@ -104,10 +109,13 @@ app.patch('/password-manager/:service', (req, res) => {
 });
 
 //get a record
-app.get('/password-manager/:service', (req, res) => {
+app.get('/password-manager/:service', authenticate, (req, res) => {
   var serv = req.params.service;
 
-  PasswordManager.findOne({service: serv}, function(err, doc){
+  PasswordManager.findOne({
+    service: serv,
+    creator_id: req.user._id
+    }, function(err, doc){
     if (err) {
       return res.status(404).send();
     }
