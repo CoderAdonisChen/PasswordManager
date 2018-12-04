@@ -61,7 +61,14 @@ app.get('/password-manager', authenticate, (req, res) => {
   PasswordManager.find({
     creator_id: req.user._id
   }).then((records) => {
-    res.send(_(records).chain().forEach().pick('service').value());
+    //var result = _(records).chain().head().pick('service').value();
+    var result = [];
+    _.forEach(records, function(value, key){
+      if (key === 'service') {
+        result = _.concat(result, value);
+      }
+    });
+    res.send(result);
   }, (e) => {
     res.status(400).send(e);
   });
