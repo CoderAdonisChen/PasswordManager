@@ -61,8 +61,8 @@ app.get('/password-manager', authenticate, (req, res) => {
   PasswordManager.find({
     creator_id: req.user._id
   }).then((records) => {
-    
-    res.send({records});
+
+    res.send(_.pick(records, ['service']));
   }, (e) => {
     res.status(400).send(e);
   });
@@ -79,7 +79,7 @@ app.post('/password-manager', authenticate, (req, res) => {
   });
 
   record.save().then((doc) => {
-    res.(_.pick(doc, ['service', 'account']));
+    res.send(_.pick(doc, ['service', 'account']));
   }, (e) => {
     res.send(e);
   });
