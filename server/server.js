@@ -56,6 +56,18 @@ app.delete('/users/logout', authenticate, (req, res) => {
   });
 });
 
+//Get all the records for the specific creator_id
+app.get('/password-manager', authenticate, (req, res) => {
+  PasswordManager.find({
+    creator_id: req.user._id
+  }).then((records) => {
+    res.send({records});
+  }, (e) => {
+    res.status(400).send(e);
+  });
+});
+
+
 //insert a record
 app.post('/password-manager', authenticate, (req, res) => {
   var record = new PasswordManager({
@@ -66,7 +78,7 @@ app.post('/password-manager', authenticate, (req, res) => {
   });
 
   record.save().then((doc) => {
-    res.send(doc);
+    res.send(doc, ['service', 'account']);
   }, (e) => {
     res.send(e);
   });
@@ -104,7 +116,7 @@ app.patch('/password-manager/:service', authenticate, (req, res) => {
       if (!doc) {
         return res.status(404).send();
       }
-      res.send(_.pick(doc, ['account', 'password']));
+      res.send(_.pick(doc, ['service', 'account']));
     }).catch((e) => {
       res.status(400).send();
     });
