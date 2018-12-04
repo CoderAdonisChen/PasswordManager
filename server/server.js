@@ -63,10 +63,9 @@ app.get('/password-manager', authenticate, (req, res) => {
   }).then((records) => {
     //var result = _(records).chain().head().pick('service').value();
     var result = [];
-    _.forEach(records, function(value, key){
-      if (key === 'service') {
-        result = _.concat(result, value);
-      }
+    _.forEach(records, function(value){
+      var tmp = _.pick(value, ['service']);
+      result = _.concat(result, tmp);
     });
     res.send(result);
   }, (e) => {
